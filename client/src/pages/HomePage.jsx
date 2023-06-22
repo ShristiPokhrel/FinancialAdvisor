@@ -3,16 +3,33 @@ import Layout from "../components/Layout/Layout";
 import { Modal, Alert, Form, Table } from "react-bootstrap";
 import axios from "axios";
 import { useForm } from "react-hook-form";
-
+import {format} from "date-fns"
 const HomePage = () => {
-  const { register, handleSubmit, reset } = useForm();
   const [showModal, setShowModal] = useState(false);
   // const [loading, setLoading] = useState(false);
-  const [allTransaction, setAllTransaction] = useState([]);
+  const [allTransaction, setAllTransaction] = useState(new Map());
   const [successMessage, setSuccessMessage] = useState("");
+   const [editable, setEditable] = useState({});
+  const { register, handleSubmit, reset,setValue } = useForm();
+const formFileld=["description","amount","category","date","type"]
+
+useEffect(()=>{
+for (const [key,value] of Object.entries(editable)) {
+  if(key==="date"){
+    // setValue("date",format(value,'MM/dd/yyyy'))
+  }
+  formFileld.includes(key)&& setValue(key,value)
+}
+},[editable])
+
 
   //table data
   const columns = [
+   
+      {
+        title: "S.N.",
+       
+      },
     {
       title: "Date",
       dataIndex: "date",
@@ -49,13 +66,13 @@ const HomePage = () => {
   const getAllTransactions = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-      console.log("User Data " + user._id);
+  
       // setLoading(true);
       const res = await axios.get(
         `http://localhost:8080/transactions/${user._id}`
       );
-      // setLoading(false);
-      setAllTransaction(res.data);
+     const result= res.data.map(trns=>[trns._id,trns])
+      setAllTransaction(new Map(result));
       // console.log(res.data);
       setSuccessMessage("Successfully added!");
     } catch (error) {
@@ -68,7 +85,7 @@ const HomePage = () => {
     getAllTransactions();
   }, []);
 
-  const handleSubmit1 = async (values) => {
+  const  addData = async (values) => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
       // setLoading(true)
@@ -81,16 +98,63 @@ const HomePage = () => {
       // setLoading(false)
       setSuccessMessage("Successfully added");
       setShowModal(false);
-      setAllTransaction((prevTransactions) => [
-        ...prevTransactions,
-        response.data,
-      ]);
+      setAllTransaction((prevTransactions) =>{
+        prevTransactions.set(response.data._id,response.data)
+        return prevTransactions;
+      });
+
+
     } catch (error) {
       console.log(err);
       alert("error occuered");
       setSuccessMessage("Failed to add transaction");
     }
   };
+  const edidData=async(data)=>{
+    try {
+      const response = (await axios.put(`http://localhost:8080/transactions/${editable._id}`, data)).data;
+      setSuccessMessage("Successfully edited");
+
+      setShowModal(false);
+      console.log(response);
+      setAllTransaction(prev=>{
+       prev.set(response._id,response)
+        return prev;
+      })
+
+    } catch (error) {
+      console.log(err);
+      alert("error occuered");
+      setSuccessMessage("Failed to add transaction");
+    }
+    finally{
+      setEditable({});
+    }
+  }
+  const handleDelete = async (id) => {
+    const value = confirm("Are you want to delete this product");
+    if(value){
+    try {
+      await axios.delete(`http://localhost:8080/transactions/${id}`);
+      
+      setAllTransaction((prevTransactions) =>
+   {
+    
+if(prevTransactions.has(id)) prevTransactions.delete(id);
+
+    return new Map(prevTransactions.entries())
+   }
+      );
+      setSuccessMessage("Transaction deleted successfully");
+    } catch (error) {
+      console.log(error);
+      setSuccessMessage("Failed to delete transaction");
+    }
+  } 
+
+  };
+  const formatDate = (dateStr) =>
+    new Date(dateStr).toLocaleDateString().replace(/\//g, "-");
   return (
     <Layout>
       {successMessage && (
@@ -120,14 +184,17 @@ const HomePage = () => {
         <div>
           <button
             className="btn btn-primary"
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              reset();
+              setEditable({});
+              setShowModal(true)}}
           >
             Add New
           </button>
         </div>
       </div>
       <div>
-        <Table striped bordered hover>
+        <Table striped bordered hover className="min-90">
           <thead>
             <tr>
               {columns.map((column, index) => (
@@ -136,18 +203,27 @@ const HomePage = () => {
             </tr>
           </thead>
           <tbody>
-            {allTransaction.map((transaction, index) => (
+          
+            {Array.from(allTransaction.values()).map((transaction, index) => (
               <tr key={index}>
                 <td>{index + 1}</td>
+                <td>{formatDate(transaction.date)}</td>
                 <td>{transaction.amount}</td>
                 <td>{transaction.type}</td>
                 <td>{transaction.category}</td>
                 <td>{transaction.description}</td>
                 <td>
-                  <button type="button" className="btn btn-info mx-2">
+                  <button type="button" className="btn btn-info mx-2" onClick={
+                    ()=>{
+                      setShowModal(true);
+                      setEditable(transaction);
+                    }
+                  }>
                     Edit
                   </button>
-                  <button type="button" className="btn btn-danger">
+                  <button type="button" className="btn btn-danger" 
+                  onClick={() => handleDelete(transaction._id)}
+                  >
                     Delete
                   </button>
                 </td>
@@ -161,7 +237,10 @@ const HomePage = () => {
           <Modal.Title>Add Transaction</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form onSubmit={handleSubmit(handleSubmit1)}>
+          <Form onSubmit={handleSubmit((data)=>{
+         
+            Object.keys(editable).length===0?addData(data):edidData(data);
+          })}>
             <Form.Group className="mb-3" controlId="formName">
               <Form.Label name="amount">Enter your Amount</Form.Label>
               <Form.Control

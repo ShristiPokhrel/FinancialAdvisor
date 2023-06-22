@@ -51,12 +51,13 @@ const editTransaction = async (req, res) => {
       payload,
       { new: true } // Set the new option to true to return the updated document
     );
+    
 
     if (!updatedTransaction) {
       return res.status(404).send("Transaction not found");
     }
 
-    res.status(200).send("Edit Successfully");
+    res.status(200).json(updatedTransaction);
   } catch (error) {
     console.log(error);
     res.status(500).json(error);
@@ -65,9 +66,8 @@ const editTransaction = async (req, res) => {
 
 const addTransaction = async (req, res) => {
   try {
-    const newTransaction = new transactionModel(req.body);
-    await newTransaction.save();
-    res.status(201).send("Transaction Created");
+  const data=await transactionModel.create(req.body)
+    res.status(201).json(data);
   } catch (error) {
     console.log(error);
     res.status(500).json(error);
