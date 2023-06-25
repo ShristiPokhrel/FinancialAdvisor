@@ -1,30 +1,44 @@
 const transactionModel = require("../models/transactionModel");
 const moment = require("moment");
-
+const transaction = new transactionModel({
+  // other fields
+  date: new Date() // or provide a specific date value: new Date('2023-06-25')
+});
 const getAllTransactions = async (req, res) => {
   try {
-    // const { frequency, selectedDate, type, userid } = req.query;
-    // let query = { userid };
+    const { frequency, type } = req.query;
+    const { selectedDate, userid } = req.params;
 
-    // if (frequency !== "custom") {
-    //   query.date = {
-    //     $gt: moment().subtract(Number(frequency), "d").toDate(),
-    //   };
-    // } else {
-    //   query.date = {
-    //     $gte: selectedDate[0],
-    //     $lte: selectedDate[1],
-    //   };
-    // }
+    let dateFilter = {};
+    let typeFilter = {};
 
-    // if (type !== "all") {
-    //   query.type = type;
-    // }
+    if (frequency === "custom") {
+      dateFilter = {
+        $gte: moment(selectedDate[0]).startOf("day").toDate(),
+        $lte: moment(selectedDate[1]).endOf("day").toDate(),
+      };
+    } else if (frequency === "7") {
+      dateFilter = {
+        $gte: moment().subtract(1, "week").startOf("day").toDate(),
+        $lte: moment().endOf("day").toDate(),
+      };
+    } else if (frequency === "30") {
+      dateFilter = {
+        $gte: moment().subtract(1, "month").startOf("day").toDate(),
+        $lte: moment().endOf("day").toDate(),
+      };
+    } else if (frequency === "365") {
+      dateFilter = {
+        $gte: moment().subtract(1, "year").startOf("day").toDate(),
+        $lte: moment().endOf("day").toDate(),
+      };
+    }
 
     const transactions = await transactionModel.find({
-      userid:req.params.userid
+      date: dateFilter,
+      userid,
     });
-    console.log(req.params.userid);
+
     res.status(200).json(transactions);
   } catch (error) {
     console.log(error);
