@@ -1,21 +1,27 @@
 const transactionModel = require("../models/transactionModel");
 const moment = require("moment");
-const transaction = new transactionModel({
-  // other fields
-  date: new Date() // or provide a specific date value: new Date('2023-06-25')
-});
+
 const getAllTransactions = async (req, res) => {
   try {
-    const { frequency, type } = req.query;
-    const { selectedDate, userid } = req.params;
-
+    console.log("called");
+    const { frequency, type ,startDate,endDate} = req.query;
+    const {  userid } = req.params;
+console.log(startDate,endDate,"Date");
     let dateFilter = {};
     let typeFilter = {};
 
+    console.log(frequency);
     if (frequency === "custom") {
+      console.log(startDate);
+      if(startDate.length>0){
+console.log("start date called");
+dateFilter={...dateFilter,$gte:new Date(startDate).toISOString()}
+      }
+      
+      if(endDate)
       dateFilter = {
-        $gte: moment(selectedDate[0]).startOf("day").toDate(),
-        $lte: moment(selectedDate[1]).endOf("day").toDate(),
+        ...dateFilter,
+        $lte: moment(endDate).endOf("day").toDate(),
       };
     } else if (frequency === "7") {
       dateFilter = {
@@ -33,11 +39,11 @@ const getAllTransactions = async (req, res) => {
         $lte: moment().endOf("day").toDate(),
       };
     }
-
-    const transactions = await transactionModel.find({
-      date: dateFilter,
-      userid,
-    });
+let  filterObj={userid}
+console.log(dateFilter);
+filterObj =Object.values(dateFilter).length>0?{userid,date:dateFilter}:filterObj
+console.log(filterObj);
+    const transactions = await transactionModel.find(filterObj);
 
     res.status(200).json(transactions);
   } catch (error) {

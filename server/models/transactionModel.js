@@ -26,6 +26,7 @@ const transactionSchema = new mongoose.Schema(
     date: {
       type: Date,
       required: [true, "date is required"],
+      
     },
   },
   { timestamps: true }

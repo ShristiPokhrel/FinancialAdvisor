@@ -8,7 +8,13 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import en from "date-fns/locale/en-US";
 
+
+const changeArrayToMap=(arr)=>{
+const arrayData=arr.map(elm=>([elm._id,elm]))
+return new Map(arrayData)
+}
 const HomePage = () => {
+
   const [showModal, setShowModal] = useState(false);
  
   const [frequency,setFrequency] = useState();
@@ -78,6 +84,7 @@ const handleCustomFrequencyChange = (event) => {
   //get all transaction
   const getAllTransactions = async () => {
     try {
+      // alert("Called");
       const user = JSON.parse(localStorage.getItem("user"));
       let url = `http://localhost:8080/transactions/${user._id}`;
   
@@ -86,14 +93,16 @@ const handleCustomFrequencyChange = (event) => {
         const queryParams = {
           startDate: startDate ? startDate.toISOString() : null,
           endDate: endDate ? endDate.toISOString() : null,
+          frequency:"custom",
           type: type !== 'all' ? type : undefined,
         };
         const res = await axios.get(url, { params: queryParams });
-        setAllTransaction(res.data);
+        console.log(res.data)
+        setAllTransaction(changeArrayToMap(res.data));
       } else {
         const queryParams = { frequency, type: type !== 'all' ? type : undefined }; // Add type as a query parameter if it's not 'all'
         const res = await axios.get(url, { params: queryParams });
-        setAllTransaction(res.data);
+        setAllTransaction(changeArrayToMap(res.data));
       }
   
       setSuccessMessage("Successfully fetched transactions!");
@@ -309,7 +318,7 @@ if(prevTransactions.has(id)) prevTransactions.delete(id);
           {Array.from(allTransaction.values()).map((transaction, index) => (
               <tr key={index}>
                 <td>{index + 1}</td>
-                <td>{transaction.date ? formatDate(transaction.date) : ""}</td>
+                <td>{transaction && transaction.date ? formatDate(transaction.date) : ""}</td>
                 <td>{transaction.amount}</td>
                 <td>{transaction.type}</td>
                 <td>{transaction.category}</td>
