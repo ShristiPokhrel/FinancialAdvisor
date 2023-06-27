@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../components/Layout/Layout";
 import { Modal, Alert, Form, Table } from "react-bootstrap";
+import {UnorderedListOutlined, AreaChartOutlined} from '@ant-design/icons';
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import {format} from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import en from "date-fns/locale/en-US";
-
+import Analytics from "../components/Analytics";
 
 const changeArrayToMap=(arr)=>{
 const arrayData=arr.map(elm=>([elm._id,elm]))
@@ -16,7 +17,6 @@ return new Map(arrayData)
 const HomePage = () => {
 
   const [showModal, setShowModal] = useState(false);
- 
   const [frequency,setFrequency] = useState();
   const [selectedDate, setSelectedate] = useState([null, null])
   const [allTransaction, setAllTransaction] = useState(new Map());
@@ -25,6 +25,7 @@ const HomePage = () => {
    const [type, setType] = useState('all')
   const { register, handleSubmit, reset,setValue } = useForm();
 const formFileld=["description","amount","category","date","type"]
+const [viewData, setViewData] = useState('table')
 
 useEffect(() => {
   for (const [key, value] of Object.entries(editable)) {
@@ -113,6 +114,7 @@ const handleCustomFrequencyChange = (event) => {
   };
   
   useEffect(() => {
+ 
     getAllTransactions();
   }, [frequency, selectedDate, type]);
   
@@ -257,15 +259,17 @@ if(prevTransactions.has(id)) prevTransactions.delete(id);
             Select Type
           </h6>
           <Form.Select
-            value={frequency}
-            onChange={(values)=> setType(values)}
+            value={type}
+            onChange={(e)=> {
+              console.log(e.target.value,"select");
+              setType(e.target.value)}}
           >
             <option value="all">All</option>
             <option value="income">INCOME</option>
             <option value="expense">Expense</option>
             
           </Form.Select>
-          {frequency === "custom" && (
+          {/* {frequency === "custom" && (
   <div>
     <Form.Label>Custom Range</Form.Label>
     <div className="d-flex">
@@ -288,10 +292,16 @@ if(prevTransactions.has(id)) prevTransactions.delete(id);
     </div>
     
   </div>
-)}
+)} */}
 
 
         </div>
+        <div className="switch-icons">
+<UnorderedListOutlined className={`mx-2 ${ viewData === 'table' ? 'active-icon': 'inactive-icon'}`}
+onClick={() => setViewData('table')}/>
+<AreaChartOutlined className={`mx-2 ${ viewData === 'analytics' ? 'active-icon': 'inactive-icon'}`} 
+onClick={() => setViewData('analytics')}/>
+</div>
         <div>
           <button
             className="btn btn-primary"
@@ -304,7 +314,8 @@ if(prevTransactions.has(id)) prevTransactions.delete(id);
           </button>
         </div>
       </div>
-      <div>
+      <div> 
+        { viewData === 'table' ? (
         <Table striped bordered hover className="min-90">
           <thead>
             <tr>
@@ -341,7 +352,9 @@ if(prevTransactions.has(id)) prevTransactions.delete(id);
               </tr>
             ))}
           </tbody>
-        </Table>
+        </Table> )
+        : ( <Analytics allTransaction={allTransaction}/> 
+        )}
       </div>
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>

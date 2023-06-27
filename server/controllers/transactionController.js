@@ -9,11 +9,16 @@ const getAllTransactions = async (req, res) => {
 console.log(startDate,endDate,"Date");
     let dateFilter = {};
     let typeFilter = {};
-
+    if(type)
+{
+  typeFilter={
+    type
+  }
+}
     console.log(frequency);
     if (frequency === "custom") {
       console.log(startDate);
-      if(startDate.length>0){
+      if(startDate){
 console.log("start date called");
 dateFilter={...dateFilter,$gte:new Date(startDate).toISOString()}
       }
@@ -39,7 +44,7 @@ dateFilter={...dateFilter,$gte:new Date(startDate).toISOString()}
         $lte: moment().endOf("day").toDate(),
       };
     }
-let  filterObj={userid}
+let  filterObj={userid,...typeFilter}
 console.log(dateFilter);
 filterObj =Object.values(dateFilter).length>0?{userid,date:dateFilter}:filterObj
 console.log(filterObj);
