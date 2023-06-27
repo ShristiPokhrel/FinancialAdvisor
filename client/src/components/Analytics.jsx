@@ -1,8 +1,23 @@
 import React from 'react';
-import { Progress} from 'antd';
+import { Progress } from 'antd';
 
 const Analytics = ({ allTransaction }) => {
-  // Ensure total allTransaction is a Map
+  // category
+  const categories = [
+    "salary",
+    "shopping",
+    "food",
+    "rent",
+    "commission",
+    "fare",
+    "books",
+    "fee",
+    "medicine",
+    "maintenance",
+    "bussiness",
+    "trade",
+    "fitness"
+  ];
   if (!(allTransaction instanceof Map)) {
     return <div>Error: Invalid transaction data</div>;
   }
@@ -77,15 +92,50 @@ const Analytics = ({ allTransaction }) => {
           percent={totalExpenseTurnoverPercent.toFixed(0)} />
         </div>
         </div>
-        
-       
         </div>
-
-
-
-        
       </div>
-      
+      <div className="row"> 
+        <div className="col-md-5">
+        <h4>Categorywise Income</h4>
+        {categories.map((category) => {
+          const amount = transactionArray
+            .filter(
+              (transaction) =>
+                transaction.type === "income" && transaction.category === category
+            )
+            .reduce((acc, transaction) => acc + transaction.amount, 0);
+          const percent = (amount / totalIncomeTurnover) * 100;
+          return amount > 0 && (
+            <div className="card" key={category}>
+              <div className="card-body">
+                <h5>{category}</h5>
+                <Progress percent={percent.toFixed(0)} />
+              </div>
+            </div>
+          );
+        })}
+        </div>
+        <div className="col-md-5">
+        <h4>Categorywise Expense</h4>
+        {categories.map((category) => {
+          const amount = transactionArray
+            .filter(
+              (transaction) =>
+                transaction.type === "expense" && transaction.category === category
+            )
+            .reduce((acc, transaction) => acc + transaction.amount, 0);
+          const percent = (amount / totalExpenseTurnover) * 100;
+          return amount > 0 && (
+            <div className="card" key={category}>
+              <div className="card-body">
+                <h5>{category}</h5>
+                <Progress percent={percent.toFixed(0)} />
+              </div>
+            </div>
+          );
+        })}
+        </div>
+      </div>
       
     </>
   );

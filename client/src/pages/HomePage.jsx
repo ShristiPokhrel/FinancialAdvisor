@@ -387,6 +387,12 @@ onClick={() => setViewData('analytics')}/>
                 <option value="fare">Fare</option>
                 <option value="books">Books</option>
                 <option value="fee">Fee</option>
+                <option value="medicine">Medicine</option> 
+                <option value="maintenance">Maintenance</option>
+                <option value="bussiness">Bussiness</option>
+                <option value="trade">Trade</option>
+                <option value="fitness">Fitness</option>
+                
               </Form.Control>
               <Form.Label name="date">Date</Form.Label>
               <Form.Control type="date" {...register("date")} />
