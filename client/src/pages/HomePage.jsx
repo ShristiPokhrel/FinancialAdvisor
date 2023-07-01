@@ -9,6 +9,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import en from "date-fns/locale/en-US";
 import Analytics from "../components/Analytics";
+import { message } from "antd";
 
 const changeArrayToMap=(arr)=>{
 const arrayData=arr.map(elm=>([elm._id,elm]))
@@ -130,6 +131,7 @@ const handleCustomFrequencyChange = (event) => {
       });
       console.log(response.data);
       // setLoading(false)
+      message.success("Successfully added");
       setSuccessMessage("Successfully added");
       setShowModal(false);
       setAllTransaction((prevTransactions) =>{
@@ -148,6 +150,7 @@ const handleCustomFrequencyChange = (event) => {
     try {
       const response = (await axios.put(`http://localhost:8080/transactions/${editable._id}`, data)).data;
       setSuccessMessage("Successfully edited");
+      message.success("Successfully edited");
       setShowModal(false);
       setAllTransaction((prevTransactions) => {
         const updatedTransactions = new Map(prevTransactions);
@@ -156,7 +159,7 @@ const handleCustomFrequencyChange = (event) => {
       });
     } catch (error) {
       console.log(error);
-      alert("An error occurred");
+      message.error("An error occurred");
       setSuccessMessage("Failed to edit transaction");
     } finally {
       setEditable({});
@@ -164,7 +167,7 @@ const handleCustomFrequencyChange = (event) => {
   };
   
   const handleDelete = async (id) => {
-    const value = confirm("Are you want to delete this product");
+    const value = window.confirm("Are you want to delete this transaction");
     if(value){
     try {
       await axios.delete(`http://localhost:8080/transactions/${id}`);
@@ -178,8 +181,10 @@ if(prevTransactions.has(id)) prevTransactions.delete(id);
    }
       );
       setSuccessMessage("Transaction deleted successfully");
+      message.success("Transaction deleted successfully");
     } catch (error) {
       console.log(error);
+      message.error("Failed to delete transaction");
       setSuccessMessage("Failed to delete transaction");
     }
   } 

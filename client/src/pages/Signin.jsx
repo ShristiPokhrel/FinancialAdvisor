@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import toast from "react-hot-toast";
+import { message } from "antd";
 import "./style.css";
 
 const Signin = () => {
@@ -20,38 +20,29 @@ const Signin = () => {
     });
   };
 
-  // const [loading, setLoading] = useState(false);
-  //from submit
   const submitHandler = async (e) => {
     e.preventDefault();
     const { email, password } = users;
     if (email && password) {
-     const result= await axios
-        .post("http://localhost:8080/users/login", users)
-        localStorage.setItem('token',result.data.token)
-        localStorage.setItem('user',JSON.stringify(result.data.user))
-      toast.success("Login successfully");
-      navigate("/");
+      try {
+        const response = await axios.post("http://localhost:8080/users/login", users);
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        message.success("Login successful");
+        navigate("/");
+      } catch (error) {
+        message.error("Invalid email or password");
+      }
     } else {
-      //setLoading(false);
-
-      toast.error("something went wrong");
+      message.error("Please enter email and password");
     }
   };
 
-  //prevent for login user
-  // useEffect(() => {
-  //   if (localStorage.getItem("user")) {
-  //     navigate("/");
-  //   }
-  // }, [navigate]);
   return (
     <>
       <div className="home">
         <div className="auth-wrapper">
           <div className="auth-inner">
-            {/* {loading && <Spinner />} */}
-            {console.log(users)}
             <form onSubmit={submitHandler}>
               <h3>Sign In</h3>
 
@@ -80,15 +71,12 @@ const Signin = () => {
               </div>
 
               <div className="d-grid">
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                >
+                <button type="submit" className="btn btn-primary">
                   Submit
                 </button>
               </div>
               <p className="forgot-password text-right">
-                Already<a href="/signup">Registered?</a>
+                <a href="/signup">Not Registered?</a>
               </p>
             </form>
           </div>
