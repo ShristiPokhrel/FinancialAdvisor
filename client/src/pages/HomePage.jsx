@@ -335,7 +335,7 @@ onClick={() => setViewData('analytics')}/>
               <tr key={index}>
                 <td>{index + 1}</td>
                 <td>{transaction && transaction.date ? formatDate(transaction.date) : ""}</td>
-                <td>{transaction.amount}</td>
+                <td>Rs. {transaction.amount}</td>
                 <td>{transaction.type}</td>
                 <td>{transaction.category}</td>
                 <td>{transaction.description}</td>
