@@ -1,40 +1,94 @@
-*{
+/* Default styles for all screen sizes */
+* {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
 }
-.content{
-  height:  80vh;
+.content {
+  height: 80vh;
 }
-.navbar{
-  background-color:  #9e9b9b !important;
+.navbar {
+  background-color: #9e9b9b !important;
 }
-
-.filters{
+.filters {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 15px 20px;
   box-shadow: 0 0 3px rgb(233, 173, 173);
 }
-.min-90{
+.min-90 {
   min-height: 68vh;
 }
-
-/* //icons */
-
-.switch-icons{
+.switch-icons {
   border: 1px solid black;
   border-radius: 5px;
-  padding: 10px 15px;  
+  padding: 10px 15px;
 }
-.anticon svg{
+.anticon svg {
   font-size: 20px;
   cursor: pointer;
 }
-.active-icon{
+.active-icon {
   color: black;
 }
-.inactive-icon{
+.inactive-icon {
   color: gray;
+}
+
+/* Media Queries */
+@media (max-width: 576px) {
+  /* Adjust styles for small screens */
+  .content {
+    height: auto; /* Allow content to expand as needed */
+    padding: 15px; /* Add padding to the content */
+  }
+  .navbar {
+    background-color: #9e9b9b !important;
+  }
+  .filters {
+    flex-direction : column; /* Stack items vertically */
+    align-items: flex-start; /* Align items to the left */
+    padding: 10px 15px; /* Adjust padding */
+    box-shadow: none; /* Remove box shadow */
+  }
+  .switch-icons {
+    margin-top: 10px; /* Add some space between icons and filters */
+  }
+}
+
+@media (min-width: 577px) and (max-width: 992px) {
+  /* Adjust styles for medium screens */
+  .content {
+    height: 50vh;
+  }
+  .navbar {
+    background-color: #9e9b9b !important;
+  }
+  .filters {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    box-shadow: 0 0 3px rgb(233, 173, 173);
+  
+  }
+}
+
+@media (min-width: 993px) {
+  /* Adjust styles for large screens */
+  .content {
+    height: 80vh;
+  }
+  .navbar {
+    background-color: #9e9b9b !important;
+  }
+  .filters {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    box-shadow: 0 0 3px rgb(233, 173, 173);
+  
+  }
 }

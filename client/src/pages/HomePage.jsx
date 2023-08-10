@@ -10,6 +10,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import en from "date-fns/locale/en-US";
 import Analytics from "../components/Analytics";
 import { message } from "antd";
+import BudgetSetting from "../components/BudgetSetting";
+import BudgetAlertModal from "../components/BudgetAlertModal";
 
 const changeArrayToMap=(arr)=>{
 const arrayData=arr.map(elm=>([elm._id,elm]))
@@ -26,8 +28,38 @@ const HomePage = () => {
    const [type, setType] = useState('all')
   const { register, handleSubmit, reset,setValue } = useForm();
 const formFileld=["description","amount","category","date","type"]
-const [viewData, setViewData] = useState('table')
+const [viewData, setViewData] = useState('table');
+const [showBudgetSettingModal, setShowBudgetSettingModal] = useState(false);
+  const [budgetLimit, setBudgetLimit] = useState(0); // Initialize with 0
+  const [budgetAlertVisible, setBudgetAlertVisible] = useState(false); // State for showing the alert
 
+  // Function to handle budget limit submission
+  const handleBudgetLimitSubmit = (limit) => {
+    setBudgetLimit(limit);
+    setShowBudgetSettingModal(false);
+  };
+  useEffect(() => {
+    const totalExpenses = Array.from(allTransaction.values()).reduce((total, transaction) => {
+      if (transaction.type === "expense") {
+        return total + transaction.amount;
+      }
+      return total;
+    }, 0);
+    console.log("Total Expenses:", totalExpenses);
+    console.log("Budget Limit:", budgetLimit);
+  
+  
+    if (totalExpenses > budgetLimit) {
+      console.log("Budget Exceeded");
+      setBudgetAlertVisible(true);
+    } else {
+      console.log("Budget Not Exceeded");
+      setBudgetAlertVisible(false);
+    }
+  }, [allTransaction, budgetLimit]);
+  
+  
+ 
 useEffect(() => {
   for (const [key, value] of Object.entries(editable)) {
     if (key === "date") {
@@ -42,7 +74,7 @@ const handleCustomFrequencyChange = (event) => {
   if (event.target.value === "custom") {
     setSelectedate([null, null]);
   }
-};
+}; 
 
   //table data
   const columns = [
@@ -86,66 +118,95 @@ const handleCustomFrequencyChange = (event) => {
   //get all transaction
   const getAllTransactions = async () => {
     try {
-      // alert("Called");
       const user = JSON.parse(localStorage.getItem("user"));
       let url = `http://localhost:8080/transactions/${user._id}`;
   
+      let queryParams = { frequency, type: type !== 'all' ? type : undefined };
+  
       if (frequency === "custom") {
         const [startDate, endDate] = selectedDate;
-        const queryParams = {
+        queryParams = {
+          ...queryParams,
           startDate: startDate ? startDate.toISOString() : null,
           endDate: endDate ? endDate.toISOString() : null,
-          frequency:"custom",
-          type: type !== 'all' ? type : undefined,
+          frequency: "custom",
         };
-        const res = await axios.get(url, { params: queryParams });
-        console.log(res.data)
-        setAllTransaction(changeArrayToMap(res.data));
+      }
+  
+      const res = await axios.get(url, { params: queryParams });
+      console.log("Fetched transactions:", res.data);
+  
+      setAllTransaction(changeArrayToMap(res.data));
+  
+      // Calculate total expenses from fetched transactions
+      const totalExpenses = Array.from(res.data).reduce((total, transaction) => {
+        if (transaction.type === "expense") {
+          return total + transaction.amount;
+        }
+        return total;
+      }, 0);
+  
+      console.log("Total Expenses:", totalExpenses);
+  
+      if (totalExpenses > budgetLimit) {
+        setBudgetAlertVisible(true);
       } else {
-        const queryParams = { frequency, type: type !== 'all' ? type : undefined }; // Add type as a query parameter if it's not 'all'
-        const res = await axios.get(url, { params: queryParams });
-        setAllTransaction(changeArrayToMap(res.data));
+        setBudgetAlertVisible(false);
       }
   
       setSuccessMessage("Successfully fetched transactions!");
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching transactions:", error);
       setSuccessMessage("Unable to fetch transactions");
     }
   };
   
   useEffect(() => {
- 
+    console.log("Frequency:", frequency);
+    console.log("Selected Date:", selectedDate);
+    console.log("Type:", type);
+  
     getAllTransactions();
   }, [frequency, selectedDate, type]);
   
-
-  const  addData = async (values) => {
+  
+  const addData = async (values) => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-      // setLoading(true)
       console.log(values);
       const response = await axios.post("http://localhost:8080/transactions/", {
         ...values,
         userid: user._id,
       });
+  
+      // Update total expenses with the new transaction amount
+      const totalExpenses = Array.from(allTransaction.values()).reduce((total, transaction) => {
+        if (transaction.type === "expense") {
+          return total + transaction.amount;
+        }
+        return total;
+      }, 0) + parseFloat(values.amount);
+  
+      if (values.type === "expense" && totalExpenses > budgetLimit) {
+        setBudgetAlertVisible(true);
+      }
+  
       console.log(response.data);
-      // setLoading(false)
       message.success("Successfully added");
+      
       setSuccessMessage("Successfully added");
       setShowModal(false);
-      setAllTransaction((prevTransactions) =>{
-        prevTransactions.set(response.data._id,response.data)
+      setAllTransaction((prevTransactions) => {
+        prevTransactions.set(response.data._id, response.data);
         return prevTransactions;
       });
-
-
     } catch (error) {
-      console.log(err);
-      alert("error occuered");
+      console.log(error);
+      alert("error occurred");
       setSuccessMessage("Failed to add transaction");
     }
   };
+  
   const edidData = async (data) => {
     try {
       const response = (await axios.put(`http://localhost:8080/transactions/${editable._id}`, data)).data;
@@ -166,6 +227,8 @@ const handleCustomFrequencyChange = (event) => {
     }
   };
   
+  
+  
   const handleDelete = async (id) => {
     const value = window.confirm("Are you want to delete this transaction");
     if(value){
@@ -182,6 +245,8 @@ if(prevTransactions.has(id)) prevTransactions.delete(id);
       );
       setSuccessMessage("Transaction deleted successfully");
       message.success("Transaction deleted successfully");
+        // Call getAllTransactions to refresh the data after deletion
+        await getAllTransactions();
     } catch (error) {
       console.log(error);
       message.error("Failed to delete transaction");
@@ -219,7 +284,7 @@ if(prevTransactions.has(id)) prevTransactions.delete(id);
       )}
 
       <div className="filters">
-        <div>
+      <div>
           <h6>
             Select Frequency
           </h6>
@@ -256,9 +321,7 @@ if(prevTransactions.has(id)) prevTransactions.delete(id);
     
   </div>
 )}
-
-
-        </div>
+</div>
         <div>
           <h6>
             Select Type
@@ -298,9 +361,25 @@ if(prevTransactions.has(id)) prevTransactions.delete(id);
     
   </div>
 )} */}
-
-
+</div>
+        <div>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowBudgetSettingModal(true)}>
+            Set Budget Limit
+          </button>
         </div>
+        {/* Render the BudgetSetting modal */}
+      <BudgetSetting
+        showModal={showBudgetSettingModal}
+        handleClose={() => setShowBudgetSettingModal(false)}
+        handleBudgetLimitSubmit={handleBudgetLimitSubmit}
+      />
+      <BudgetAlertModal
+      open={budgetAlertVisible}
+      onClose={() => setBudgetAlertVisible(false)}
+    />
+       
         <div className="switch-icons">
 <UnorderedListOutlined className={`mx-2 ${ viewData === 'table' ? 'active-icon': 'inactive-icon'}`}
 onClick={() => setViewData('table')}/>
@@ -313,8 +392,7 @@ onClick={() => setViewData('analytics')}/>
             onClick={() => {
               reset();
               setEditable({});
-              setShowModal(true)}}
-          >
+              setShowModal(true)}}>
             Add New
           </button>
         </div>
