@@ -8,7 +8,7 @@ const BudgetAlertModal = ({ open, onClose }) => {
         <Modal.Title>Budget Alert</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p>You have exceeded your budget limit.</p>
+         <p style={{ color: 'red', fontWeight: 'bold' }}>You have exceeded your budget limit.</p>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onClose}>
